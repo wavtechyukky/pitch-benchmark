@@ -43,6 +43,28 @@ source .venv/bin/activate
 uv pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126 --index-strategy unsafe-best-match
 ```
 
+#### Installation on macOS
+
+The default `requirements.txt` includes CUDA-specific packages (nvidia-\*, triton, torch+cu126) that are not available on macOS. Use the following steps instead:
+
+```bash
+uv venv --python 3.10
+source .venv/bin/activate
+
+# Filter out CUDA/Linux-only packages and replace with CPU versions
+grep -v -E '^(nvidia-|triton==|torch==.*\+cu|torchaudio==.*\+cu|torchvision==.*\+cu)' \
+  requirements.txt > /tmp/requirements_mac.txt
+echo "torch==2.7.1" >> /tmp/requirements_mac.txt
+echo "torchaudio==2.7.1" >> /tmp/requirements_mac.txt
+echo "torchvision==0.22.1" >> /tmp/requirements_mac.txt
+
+# Pre-install build dependencies for crepe (requires pkg_resources from older setuptools)
+uv pip install "setuptools<70" wheel
+
+# Install all packages (disable build isolation for crepe)
+uv pip install -r /tmp/requirements_mac.txt --no-build-isolation-package crepe
+```
+
 ### Dataset Setup
 
 Download the required datasets:
